@@ -3,6 +3,7 @@ package assignment1_NaturalSpeech;
 public class Vertice {
 	String Name = "";
 	String SpeechType = "";
+	NodeStatus nodeStatus = NodeStatus.UNVISITED;
 
 	public Vertice(String edge) {
 		String[] edgeSplit = edge.split("/", 2);
@@ -20,5 +21,9 @@ public class Vertice {
 			}
 		}
 		return sameSame;
-	}	
+	}
+
+	public enum NodeStatus {
+		UNVISITED, VISITED, COMPLETE
+	}
 }

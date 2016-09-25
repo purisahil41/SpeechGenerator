@@ -1,23 +1,22 @@
 package assignment1_NaturalSpeech;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
+import java.util.Stack;
 
-public class BreadthFirstSearchHelper {
+import assignment1_NaturalSpeech.Vertice.NodeStatus;
+
+public class DepthFirstSearchHelper {
 	Graph InputGraph;
 	String[] PermittedSentenceSpec;
 	String StartWord;
 	String StartSpeechType;
 	Vertice StartVertice = null;
-	public static Queue<SequenceOfEdges> listOfNodes = new ArrayDeque<SequenceOfEdges>();
+	public static Stack<SequenceOfEdges> stackOfNodes = new Stack<SequenceOfEdges>();
 	List<SequenceOfEdges> allSequences = new ArrayList<SequenceOfEdges>();
-	boolean ifSequenceModified = false;
-	SequenceOfEdges duplicateSequence = null;
 	int noOfNodesCompared = 0;
 
-	public BreadthFirstSearchHelper(Graph inputGraph,
+	public DepthFirstSearchHelper(Graph inputGraph,
 			String[] permittedSentenceSpec, String startWord,
 			String startSpeechType) {
 		this.InputGraph = inputGraph;
@@ -35,48 +34,37 @@ public class BreadthFirstSearchHelper {
 		List<Edge> edgeNew = new ArrayList<Edge>();
 		edgeNew.add(new Edge(null, this.StartVertice, "1.0"));
 		SequenceOfEdges seq = new SequenceOfEdges(edgeNew);
-		listOfNodes.add(seq);
+		stackOfNodes.push(seq);
 	}
 
-	public List<SequenceOfEdges> PerformBFS(SequenceOfEdges Sequence) {
-
-		duplicateSequence = duplicateSequence(Sequence);
-
-		if (!(ifSequenceModified && isValidSentence(Sequence))) {
-
+	public List<SequenceOfEdges> PerformDFS(SequenceOfEdges Sequence) {
+		// Mark last vertex of the sequence as VISITED
+		List<Vertice> allVertices = getVerticesFromSequence(Sequence);
+		allVertices.get(allVertices.size() - 1).nodeStatus = NodeStatus.VISITED;
+		if (Sequence.edgeList.get(Sequence.edgeList.size() - 1).FirstVertice != null) {
+			Sequence.edgeList.get(Sequence.edgeList.size() - 1).FirstVertice.nodeStatus = NodeStatus.VISITED;
+		}
+		if (!(isValidSentence(Sequence))) {
 			// Get Edges starting from the source node
 			List<Edge> verticeEdges = GetEdgesFromNode(Sequence);
-
-			// Parse each edge
-			for (int i = 0; i < verticeEdges.size(); i++) {
+			for (Edge currEdge : verticeEdges) {
 				
+				// Marking Vertex of edges to visited
+				currEdge.FirstVertice.nodeStatus = NodeStatus.VISITED;
 				// Check the ending vertex for validity
-				if (mayFormValidSentence(duplicateSequence,
-						verticeEdges.get(i).SecondVertice)) {
-
-					if (!ifSequenceModified) {
-						SequenceOfEdges CopyOfSequence = duplicateSequence(Sequence);
-						List<Edge> listOfEdgesSequence = new ArrayList<Edge>();
-						listOfEdgesSequence.add(verticeEdges.get(i));
-						CopyOfSequence = new SequenceOfEdges(
-								listOfEdgesSequence);
-						noOfNodesCompared++;
-						listOfNodes.add(CopyOfSequence);
-					} else {
-						SequenceOfEdges duplicateSequenceLoop = duplicateSequence(duplicateSequence);
-						duplicateSequenceLoop.edgeList.add(verticeEdges.get(i));
-						noOfNodesCompared++;
-						listOfNodes.add(duplicateSequenceLoop);
-
-					}
+				if (mayFormValidSentence(Sequence, currEdge.SecondVertice)) {
+					SequenceOfEdges duplicateSequence = duplicateSequence(Sequence);
+					duplicateSequence.edgeList.add(currEdge);
+					noOfNodesCompared++;
+					stackOfNodes.push(duplicateSequence);
+					PerformDFS(stackOfNodes.peek());
 				}
 			}
 		} else {
 			allSequences.add(Sequence);
-		}
-		if (listOfNodes.size() > 0) {
-			ifSequenceModified = true;
-			PerformBFS(listOfNodes.remove());
+			if (stackOfNodes.size() > 0) {
+				stackOfNodes.pop();
+			}
 		}
 		return allSequences;
 	}
@@ -121,7 +109,7 @@ public class BreadthFirstSearchHelper {
 		return isValidSpec;
 	}
 
-	public static List<Vertice> getVerticesFromSequence(SequenceOfEdges sequence) {
+	public List<Vertice> getVerticesFromSequence(SequenceOfEdges sequence) {
 		List<Vertice> listOfVertices = new ArrayList<Vertice>();
 		for (int i = 0; i < sequence.edgeList.size(); i++) {
 

@@ -10,9 +10,9 @@ public class NaturalLanguageGenerator {
 
 		String inputFilePath = "C:\\Users\\Sahil Puri\\workspace\\CS686_Assignment1_IntroToAI\\src\\assignment1_NaturalSpeech\\input.txt";
 
-		String StartWord = "a";
-		String StartSpeechType = "DT";
-		String[] PermittedSentenceSpec = { "DT", "NN", "VBD", "NNP" };
+		String StartWord = "hans";
+		String StartSpeechType = "NNP";
+		String[] PermittedSentenceSpec = { "NNP", "VBD", "DT", "NN" };
 
 		// Reading Input Text File
 		Graph InputGraph = new Graph(inputFilePath);
@@ -21,8 +21,9 @@ public class NaturalLanguageGenerator {
 		// probabilities
 		String[] Sentence = RunBFSOnGraph(InputGraph, PermittedSentenceSpec,
 				StartWord, StartSpeechType);
-		
-		
+
+		/*String[] SentenceDFS = RunDFSOnGraph(InputGraph, PermittedSentenceSpec,
+				StartWord, StartSpeechType);*/
 
 	}
 
@@ -30,7 +31,7 @@ public class NaturalLanguageGenerator {
 			String[] PermittedSentenceSpec, String StartWord,
 			String StartSpeechType) {
 		String[] Sentence = new String[PermittedSentenceSpec.length];
-		
+
 		// Initialize BFSHelper
 		BreadthFirstSearchHelper BfsSearchHelper = new BreadthFirstSearchHelper(
 				InputGraph, PermittedSentenceSpec, StartWord, StartSpeechType);
@@ -38,13 +39,39 @@ public class NaturalLanguageGenerator {
 		// PerformBFS
 		List<SequenceOfEdges> Sequence = BfsSearchHelper
 				.PerformBFS(BfsSearchHelper.listOfNodes.remove());
+
+		printOutput(Sequence);
 		
+		System.out.println("No of comparisons " + BfsSearchHelper.noOfNodesCompared);
+		return Sentence;
+	}
+	
+	public static String[] RunDFSOnGraph(Graph InputGraph,
+			String[] PermittedSentenceSpec, String StartWord,
+			String StartSpeechType) {
+		String[] Sentence = new String[PermittedSentenceSpec.length];
+
+		// Initialize BFSHelper
+		DepthFirstSearchHelper DfsSearchHelper = new DepthFirstSearchHelper(
+				InputGraph, PermittedSentenceSpec, StartWord, StartSpeechType);
+
+		// PerformDFS
+		List<SequenceOfEdges> Sequence = DfsSearchHelper
+				.PerformDFS(DfsSearchHelper.stackOfNodes.peek());
+
+		printOutput(Sequence);
+		
+		System.out.println("No of comparisons " + DfsSearchHelper.noOfNodesCompared);
+		return Sentence;
+	}
+
+	public static void printOutput(List<SequenceOfEdges> sequence) {
 		// Print the Output
 		double MaxProb = 0.00;
 		String sentenceBest = "Best Sentence : ";
 		String SpeechSentenceCorrect = ", Correct Speech : ";
 		boolean maxExceeded = false;
-		for (SequenceOfEdges seqEdge : Sequence) {
+		for (SequenceOfEdges seqEdge : sequence) {
 
 			double prob = 1.00;
 			String sentence = "Sentence : ";
@@ -58,7 +85,7 @@ public class NaturalLanguageGenerator {
 
 			}
 
-			List<Vertice> allVertices = BfsSearchHelper
+			List<Vertice> allVertices = BreadthFirstSearchHelper
 					.getVerticesFromSequence(seqEdge);
 
 			if (maxExceeded) {
@@ -82,7 +109,5 @@ public class NaturalLanguageGenerator {
 		}
 		System.out.println(sentenceBest + SpeechSentenceCorrect
 				+ ", Probability : " + MaxProb);
-		return Sentence;
 	}
-
 }
