@@ -75,31 +75,6 @@ public class HeuristicSearchHelper {
 		return allSequences;
 	}
 
-	/*private void log(PriorityQueue<SequenceOfEdges> listOfNodes2) {
-		try {
-			File file = new File(
-					"C:\\Users\\Sahil Puri\\workspace\\CS686_Assignment1_IntroToAI\\src\\assignment1_NaturalSpeech\\log.txt");
-			FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
-			BufferedWriter bw = new BufferedWriter(fw);
-
-			for (SequenceOfEdges seq : listOfNodes2) {
-				for (int i = 0; i < seq.edgeList.size(); i++) {
-					if (i == 0) {
-						bw.append(seq.edgeList.get(i).FirstVertice.Name + "-");
-					}
-					bw.append(seq.edgeList.get(i).SecondVertice.Name + "-");
-				}
-				bw.append("\n");
-			}
-
-			bw.close();// be sure to close BufferedWriter
-
-		} catch (Exception e) {
-
-		}
-
-	}*/
-
 	private boolean checkForProbExclusion(SequenceOfEdges Sequence) {
 		// Check if Probability of Current Sequence is less than max, then
 		// IGNORE
