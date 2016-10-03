@@ -17,7 +17,6 @@ public class HeuristicSearchHelper {
 	PriorityQueue<SequenceOfEdges> listOfNodes = new PriorityQueue<SequenceOfEdges>(
 			1, comparator);
 	List<SequenceOfEdges> allSequences = new ArrayList<SequenceOfEdges>();
-	boolean ifSequenceModified = false;
 	SequenceOfEdges duplicateSequence = null;
 	int noOfNodesCompared = 1;
 
@@ -46,7 +45,7 @@ public class HeuristicSearchHelper {
 
 		duplicateSequence = duplicateSequence(Sequence);
 
-		if (!(ifSequenceModified && isValidSentence(Sequence))) {
+		if (!(isValidSentence(Sequence))) {
 
 			// Get Edges starting from the source node
 			List<Edge> verticeEdges = getEdgesFromNode(Sequence);
@@ -57,27 +56,12 @@ public class HeuristicSearchHelper {
 				// Check the ending vertex for validity
 				if (mayFormValidSentence(duplicateSequence,
 						verticeEdges.get(i).secondVertice)) {
-
-					if (!ifSequenceModified) {
-						SequenceOfEdges CopyOfSequence = duplicateSequence(Sequence);
-						List<Edge> listOfEdgesSequence = new ArrayList<Edge>();
-						listOfEdgesSequence.add(verticeEdges.get(i));
-						CopyOfSequence = new SequenceOfEdges(
-								listOfEdgesSequence);
-						if (checkForProbExclusion(CopyOfSequence)) {
-
-							noOfNodesCompared++;
-							listOfNodes.add(CopyOfSequence);
-							//log(listOfNodes);
-						}						
-					} else {
+				
 						SequenceOfEdges duplicateSequenceLoop = duplicateSequence(duplicateSequence);
 						duplicateSequenceLoop.edgeList.add(verticeEdges.get(i));
 						if (checkForProbExclusion(duplicateSequenceLoop)) {
-
 						noOfNodesCompared++;
-						listOfNodes.add(duplicateSequenceLoop);
-						}						
+						listOfNodes.add(duplicateSequenceLoop);							
 					}
 				}
 			}
@@ -86,7 +70,6 @@ public class HeuristicSearchHelper {
 			checkForMaxProbability(Sequence);
 		}
 		if (listOfNodes.size() > 0) {
-			ifSequenceModified = true;
 			PerformHeuristicSearch(listOfNodes.remove());
 		}
 		return allSequences;

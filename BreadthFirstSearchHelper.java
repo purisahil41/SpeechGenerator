@@ -13,7 +13,6 @@ public class BreadthFirstSearchHelper {
 	Vertice startVertice = null;
 	public static Queue<SequenceOfEdges> listOfNodes = new ArrayDeque<SequenceOfEdges>();
 	List<SequenceOfEdges> allSequences = new ArrayList<SequenceOfEdges>();
-	boolean ifSequenceModified = false;
 	SequenceOfEdges duplicateSequence = null;
 	int noOfNodesCompared = 1;
 
@@ -42,40 +41,28 @@ public class BreadthFirstSearchHelper {
 
 		duplicateSequence = duplicateSequence(Sequence);
 
-		if (!(ifSequenceModified && isValidSentence(Sequence))) {
+		if (!(isValidSentence(Sequence))) {
 
 			// Get Edges starting from the source node
 			List<Edge> verticeEdges = getEdgesFromNode(Sequence);
 
 			// Parse each edge
 			for (int i = 0; i < verticeEdges.size(); i++) {
-				
+
 				// Check the ending vertex for validity
 				if (mayFormValidSentence(duplicateSequence,
 						verticeEdges.get(i).secondVertice)) {
 
-					if (!ifSequenceModified) {
-						SequenceOfEdges CopyOfSequence = duplicateSequence(Sequence);
-						List<Edge> listOfEdgesSequence = new ArrayList<Edge>();
-						listOfEdgesSequence.add(verticeEdges.get(i));
-						CopyOfSequence = new SequenceOfEdges(
-								listOfEdgesSequence);
-						noOfNodesCompared++;
-						listOfNodes.add(CopyOfSequence);
-					} else {
-						SequenceOfEdges duplicateSequenceLoop = duplicateSequence(duplicateSequence);
-						duplicateSequenceLoop.edgeList.add(verticeEdges.get(i));
-						noOfNodesCompared++;
-						listOfNodes.add(duplicateSequenceLoop);
-
-					}
+					SequenceOfEdges duplicateSequenceLoop = duplicateSequence(duplicateSequence);
+					duplicateSequenceLoop.edgeList.add(verticeEdges.get(i));
+					noOfNodesCompared++;
+					listOfNodes.add(duplicateSequenceLoop);
 				}
 			}
 		} else {
 			allSequences.add(Sequence);
 		}
 		if (listOfNodes.size() > 0) {
-			ifSequenceModified = true;
 			performBFS(listOfNodes.remove());
 		}
 		return allSequences;

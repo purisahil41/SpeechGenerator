@@ -20,8 +20,14 @@ public class NaturalLanguageGenerator {
 		// Search strategy to be employed
 		String searchStrategy = "HeuristicSearch";
 
+		long startTime = System.nanoTime();
+        
+		
 		generate(inputGraph, permittedSentenceSpec, startWord, startSpeechType,
 				searchStrategy);
+		long stopTime = System.nanoTime();
+		long totalTime = stopTime - startTime;  
+		System.out.println(" Total Time is " + totalTime);
 
 	}
 	/*
