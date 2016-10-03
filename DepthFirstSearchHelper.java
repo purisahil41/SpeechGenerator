@@ -7,52 +7,51 @@ import java.util.Stack;
 import assignment1_NaturalSpeech.Vertice.NodeStatus;
 
 public class DepthFirstSearchHelper {
-	Graph InputGraph;
-	String[] PermittedSentenceSpec;
-	String StartWord;
-	String StartSpeechType;
-	Vertice StartVertice = null;
+	Graph inputGraph;
+	String[] permittedSentenceSpec;
+	String startWord;
+	String startSpeechType;
+	Vertice startVertice = null;
 	public static Stack<SequenceOfEdges> stackOfNodes = new Stack<SequenceOfEdges>();
 	List<SequenceOfEdges> allSequences = new ArrayList<SequenceOfEdges>();
-	int noOfNodesCompared = 0;
+	int noOfNodesCompared = 1;
 
 	public DepthFirstSearchHelper(Graph inputGraph,
 			String[] permittedSentenceSpec, String startWord,
 			String startSpeechType) {
-		this.InputGraph = inputGraph;
-		this.PermittedSentenceSpec = permittedSentenceSpec;
-		this.StartWord = startWord;
-		this.StartSpeechType = startSpeechType;
+		this.inputGraph = inputGraph;
+		this.permittedSentenceSpec = permittedSentenceSpec;
+		this.startWord = startWord;
+		this.startSpeechType = startSpeechType;
 
-		for (Vertice ver : this.InputGraph.Vertices) {
-			if (ver.Name.equals(this.StartWord)
-					&& ver.SpeechType.equals(this.StartSpeechType)) {
-				this.StartVertice = ver;
+		for (Vertice ver : this.inputGraph.Vertices) {
+			if (ver.Name.equals(this.startWord)
+					&& ver.SpeechType.equals(this.startSpeechType)) {
+				this.startVertice = ver;
 				break;
 			}
 		}
 		List<Edge> edgeNew = new ArrayList<Edge>();
-		edgeNew.add(new Edge(null, this.StartVertice, "1.0"));
+		edgeNew.add(new Edge(null, this.startVertice, "1.0"));
 		SequenceOfEdges seq = new SequenceOfEdges(edgeNew);
 		stackOfNodes.push(seq);
 	}
 
 	public List<SequenceOfEdges> PerformDFS(SequenceOfEdges Sequence) {
-		// Mark last vertex of the sequence as VISITED
 		List<Vertice> allVertices = getVerticesFromSequence(Sequence);
 		allVertices.get(allVertices.size() - 1).nodeStatus = NodeStatus.VISITED;
-		if (Sequence.edgeList.get(Sequence.edgeList.size() - 1).FirstVertice != null) {
-			Sequence.edgeList.get(Sequence.edgeList.size() - 1).FirstVertice.nodeStatus = NodeStatus.VISITED;
+		if (Sequence.edgeList.get(Sequence.edgeList.size() - 1).firstVertice != null) {
+			Sequence.edgeList.get(Sequence.edgeList.size() - 1).firstVertice.nodeStatus = NodeStatus.VISITED;
 		}
 		if (!(isValidSentence(Sequence))) {
 			// Get Edges starting from the source node
-			List<Edge> verticeEdges = GetEdgesFromNode(Sequence);
+			List<Edge> verticeEdges = getEdgesFromNode(Sequence);
 			for (Edge currEdge : verticeEdges) {
 				
 				// Marking Vertex of edges to visited
-				currEdge.FirstVertice.nodeStatus = NodeStatus.VISITED;
+				currEdge.firstVertice.nodeStatus = NodeStatus.VISITED;
 				// Check the ending vertex for validity
-				if (mayFormValidSentence(Sequence, currEdge.SecondVertice)) {
+				if (mayFormValidSentence(Sequence, currEdge.secondVertice)) {
 					SequenceOfEdges duplicateSequence = duplicateSequence(Sequence);
 					duplicateSequence.edgeList.add(currEdge);
 					noOfNodesCompared++;
@@ -72,10 +71,10 @@ public class DepthFirstSearchHelper {
 	private boolean isValidSentence(SequenceOfEdges sequence) {
 		boolean isValidSpec = true;
 		List<Vertice> listOfVertices = getVerticesFromSequence(sequence);
-		if (listOfVertices.size() == PermittedSentenceSpec.length) {
-			for (int i = 0; i < PermittedSentenceSpec.length; i++) {
+		if (listOfVertices.size() == permittedSentenceSpec.length) {
+			for (int i = 0; i < permittedSentenceSpec.length; i++) {
 				if (!listOfVertices.get(i).SpeechType
-						.equals(PermittedSentenceSpec[i])) {
+						.equals(permittedSentenceSpec[i])) {
 					isValidSpec = false;
 					break;
 				}
@@ -99,8 +98,8 @@ public class DepthFirstSearchHelper {
 		boolean isValidSpec = false;
 		List<Vertice> listOfVertices = getVerticesFromSequence(Sequence);
 		if (listOfVertices.size() > 0
-				&& listOfVertices.size() < PermittedSentenceSpec.length) {
-			if (PermittedSentenceSpec[listOfVertices.size()]
+				&& listOfVertices.size() < permittedSentenceSpec.length) {
+			if (permittedSentenceSpec[listOfVertices.size()]
 					.equals(vertex.SpeechType)) {
 				isValidSpec = true;
 			}
@@ -113,11 +112,11 @@ public class DepthFirstSearchHelper {
 		List<Vertice> listOfVertices = new ArrayList<Vertice>();
 		for (int i = 0; i < sequence.edgeList.size(); i++) {
 
-			if (i == 0 && sequence.edgeList.get(i).FirstVertice != null) {
-				listOfVertices.add(sequence.edgeList.get(i).FirstVertice);
-				listOfVertices.add(sequence.edgeList.get(i).SecondVertice);
+			if (i == 0 && sequence.edgeList.get(i).firstVertice != null) {
+				listOfVertices.add(sequence.edgeList.get(i).firstVertice);
+				listOfVertices.add(sequence.edgeList.get(i).secondVertice);
 			} else {
-				listOfVertices.add(sequence.edgeList.get(i).SecondVertice);
+				listOfVertices.add(sequence.edgeList.get(i).secondVertice);
 			}
 		}
 
@@ -125,12 +124,12 @@ public class DepthFirstSearchHelper {
 
 	}
 
-	public List<Edge> GetEdgesFromNode(SequenceOfEdges Sequence) {
+	public List<Edge> getEdgesFromNode(SequenceOfEdges Sequence) {
 
 		Edge currentEdge = Sequence.edgeList.get(Sequence.edgeList.size() - 1);
 		List<Edge> edgeList = new ArrayList<Edge>();
-		for (Edge edge : this.InputGraph.Edges) {
-			if (edge.FirstVertice.equals(currentEdge.SecondVertice)) {
+		for (Edge edge : this.inputGraph.Edges) {
+			if (edge.firstVertice.equals(currentEdge.secondVertice)) {
 				edgeList.add(edge);
 			}
 		}

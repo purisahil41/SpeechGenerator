@@ -1,23 +1,27 @@
 package assignment1_NaturalSpeech;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Queue;
+import java.util.PriorityQueue;
 
-public class BreadthFirstSearchHelper {
+public class HeuristicSearchHelper {
 	Graph inputGraph;
 	String[] permittedSentenceSpec;
 	String startWord;
 	String startSpeechType;
 	Vertice startVertice = null;
-	public static Queue<SequenceOfEdges> listOfNodes = new ArrayDeque<SequenceOfEdges>();
+	double maxProb = 0.0;
+
+	Comparator<SequenceOfEdges> comparator = new ProbabilityComparator();
+	PriorityQueue<SequenceOfEdges> listOfNodes = new PriorityQueue<SequenceOfEdges>(
+			1, comparator);
 	List<SequenceOfEdges> allSequences = new ArrayList<SequenceOfEdges>();
 	boolean ifSequenceModified = false;
 	SequenceOfEdges duplicateSequence = null;
 	int noOfNodesCompared = 1;
 
-	public BreadthFirstSearchHelper(Graph inputGraph,
+	public HeuristicSearchHelper(Graph inputGraph,
 			String[] permittedSentenceSpec, String startWord,
 			String startSpeechType) {
 		this.inputGraph = inputGraph;
@@ -38,7 +42,7 @@ public class BreadthFirstSearchHelper {
 		listOfNodes.add(seq);
 	}
 
-	public List<SequenceOfEdges> performBFS(SequenceOfEdges Sequence) {
+	public List<SequenceOfEdges> PerformHeuristicSearch(SequenceOfEdges Sequence) {
 
 		duplicateSequence = duplicateSequence(Sequence);
 
@@ -49,7 +53,7 @@ public class BreadthFirstSearchHelper {
 
 			// Parse each edge
 			for (int i = 0; i < verticeEdges.size(); i++) {
-				
+
 				// Check the ending vertex for validity
 				if (mayFormValidSentence(duplicateSequence,
 						verticeEdges.get(i).secondVertice)) {
@@ -60,25 +64,101 @@ public class BreadthFirstSearchHelper {
 						listOfEdgesSequence.add(verticeEdges.get(i));
 						CopyOfSequence = new SequenceOfEdges(
 								listOfEdgesSequence);
-						noOfNodesCompared++;
-						listOfNodes.add(CopyOfSequence);
+						if (checkForProbExclusion(CopyOfSequence)) {
+
+							noOfNodesCompared++;
+							listOfNodes.add(CopyOfSequence);
+							//log(listOfNodes);
+						}						
 					} else {
 						SequenceOfEdges duplicateSequenceLoop = duplicateSequence(duplicateSequence);
 						duplicateSequenceLoop.edgeList.add(verticeEdges.get(i));
+						if (checkForProbExclusion(duplicateSequenceLoop)) {
+
 						noOfNodesCompared++;
 						listOfNodes.add(duplicateSequenceLoop);
-
+						}						
 					}
 				}
 			}
 		} else {
 			allSequences.add(Sequence);
+			checkForMaxProbability(Sequence);
 		}
 		if (listOfNodes.size() > 0) {
 			ifSequenceModified = true;
-			performBFS(listOfNodes.remove());
+			PerformHeuristicSearch(listOfNodes.remove());
 		}
 		return allSequences;
+	}
+
+	/*private void log(PriorityQueue<SequenceOfEdges> listOfNodes2) {
+		try {
+			File file = new File(
+					"C:\\Users\\Sahil Puri\\workspace\\CS686_Assignment1_IntroToAI\\src\\assignment1_NaturalSpeech\\log.txt");
+			FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+			BufferedWriter bw = new BufferedWriter(fw);
+
+			for (SequenceOfEdges seq : listOfNodes2) {
+				for (int i = 0; i < seq.edgeList.size(); i++) {
+					if (i == 0) {
+						bw.append(seq.edgeList.get(i).FirstVertice.Name + "-");
+					}
+					bw.append(seq.edgeList.get(i).SecondVertice.Name + "-");
+				}
+				bw.append("\n");
+			}
+
+			bw.close();// be sure to close BufferedWriter
+
+		} catch (Exception e) {
+
+		}
+
+	}*/
+
+	private boolean checkForProbExclusion(SequenceOfEdges Sequence) {
+		// Check if Probability of Current Sequence is less than max, then
+		// IGNORE
+		double prob = getProbability(Sequence);
+		if (prob < maxProb) {
+			return false;
+		}
+		return true;
+	}
+
+	private void checkForMaxProbability(SequenceOfEdges Sequence) {
+		double prob = getProbability(Sequence);
+		if (prob > maxProb) {
+			maxProb = prob;
+		}
+	}
+
+	private double getProbability(SequenceOfEdges Sequence) {
+		double prob = 1.0;
+		for (Edge edge : Sequence.edgeList) {
+			prob *= edge.probability;
+		}
+		return prob;
+	}
+
+	public class ProbabilityComparator implements Comparator<SequenceOfEdges> {
+		@Override
+		public int compare(SequenceOfEdges x, SequenceOfEdges y) {
+			double probX = calculateProbForSequence(x);
+			double probY = calculateProbForSequence(y);
+			if (probX < probY) {
+				return -1;
+			}
+			if (probX > probY) {
+				return 1;
+			}
+			return 0;
+		}
+
+		private double calculateProbForSequence(SequenceOfEdges x) {
+			return x.edgeList.get(x.edgeList.size() - 1).probability;
+		}
 	}
 
 	private boolean isValidSentence(SequenceOfEdges sequence) {
@@ -114,11 +194,32 @@ public class BreadthFirstSearchHelper {
 				&& listOfVertices.size() < permittedSentenceSpec.length) {
 			if (permittedSentenceSpec[listOfVertices.size()]
 					.equals(vertex.SpeechType)) {
-				isValidSpec = true;
+				if (listOfVertices.size() == permittedSentenceSpec.length - 1) {
+					isValidSpec = true;
+				} else if (listOfVertices.size() + 1 <= permittedSentenceSpec.length) {
+					if (isValidPropogableEdgePresent(vertex,
+							permittedSentenceSpec[listOfVertices.size() + 1])) {
+						isValidSpec = true;
+					} else {
+						isValidSpec = false;
+					}
+
+				}
 			}
 
 		}
 		return isValidSpec;
+	}
+
+	private boolean isValidPropogableEdgePresent(Vertice vertex, String string) {
+		for (Edge e : inputGraph.Edges) {
+			if (e.firstVertice.equals(vertex)) {
+				if (e.secondVertice.SpeechType.equals(string)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public static List<Vertice> getVerticesFromSequence(SequenceOfEdges sequence) {

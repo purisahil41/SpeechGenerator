@@ -1,75 +1,154 @@
 package assignment1_NaturalSpeech;
 
-import java.util.ArrayDeque;
 import java.util.List;
-import java.util.Queue;
 
 public class NaturalLanguageGenerator {
 
 	public static void main(String[] args) {
 
+		// File Path for Input.txt
 		String inputFilePath = "C:\\Users\\Sahil Puri\\workspace\\CS686_Assignment1_IntroToAI\\src\\assignment1_NaturalSpeech\\input.txt";
+		// Starting Word of the sentence to be constructed
+		String startWord = "hans";
+		// Permitted Sentence Structure
+		String[] permittedSentenceSpec = { "NNP", "VBD", "DT", "NN" };
+		// Part of the speech of the starting word -- Ideally can be different
+		// but same as the first POS of sentence in this case
+		String startSpeechType = permittedSentenceSpec[0];
+		// Reading Input Text File into local graph data structure
+		Graph inputGraph = new Graph(inputFilePath);
+		// Search strategy to be employed
+		String searchStrategy = "HeuristicSearch";
 
-		String StartWord = "hans";
-		String StartSpeechType = "NNP";
-		String[] PermittedSentenceSpec = { "NNP", "VBD", "DT", "NN" };
-
-		// Reading Input Text File
-		Graph InputGraph = new Graph(inputFilePath);
-
-		// Run BFS and return sentences with permitted specification and
-		// probabilities
-		String[] Sentence = RunBFSOnGraph(InputGraph, PermittedSentenceSpec,
-				StartWord, StartSpeechType);
-
-		/*String[] SentenceDFS = RunDFSOnGraph(InputGraph, PermittedSentenceSpec,
-				StartWord, StartSpeechType);*/
+		generate(inputGraph, permittedSentenceSpec, startWord, startSpeechType,
+				searchStrategy);
 
 	}
+	/*
+	 * This method calls the search algorithm.
+	 * Input - 
+	 * 	InputGraph : Graph - of input.txt file
+	 * 	PermittedSentenceSpec : String array - for the permitted sentence structure.
+	 * 	StartWord : String - starting word of the sentence to be searched.
+	 * 	StartSpeechType : String - Speech type of the starting word : Same as the fist POS of the provided sentence structure.
+	 * 	searchStrategy : String - THe search algorithm to be employed.
+	 */
+	public static String[] generate(Graph inputGraph,
+			String[] permittedSentenceSpec, String startWord,
+			String startSpeechType, String searchStrategy) {
+		String[] sentenceHeuristic = null;
+		if (searchStrategy.equals("BreadthFirstSearch")) {
+			// Run BFS and return sentences with permitted specification and
+			// probabilities
+			sentenceHeuristic = runBFSOnGraph(inputGraph,
+					permittedSentenceSpec, startWord, startSpeechType);
+		} else if (searchStrategy.equals("DepthFirstSearch")) {
+			// Run DFS and return sentences with permitted specification and
+			// probabilities
+			sentenceHeuristic = runDFSOnGraph(inputGraph,
+					permittedSentenceSpec, startWord, startSpeechType);
+		} else if (searchStrategy.equals("HeuristicSearch")) {
+			// Run Heuristic and return sentences with permitted specification
+			// and
+			// probabilities
+			sentenceHeuristic = runHeuristicSearchOnGraph(inputGraph,
+					permittedSentenceSpec, startWord, startSpeechType);
+		}
+		return sentenceHeuristic;
 
-	public static String[] RunBFSOnGraph(Graph InputGraph,
+	}
+	/*
+	 * This method calls the implementer class of Heuristic algorithm.
+	 * Input - 
+	 * 	InputGraph : Graph - of input.txt file
+	 * 	PermittedSentenceSpec : String array - for the permitted sentence structure
+	 * 	StartWord : String - starting word of the sentence to be searched
+	 * 	StartSpeechType : String - Speech type of the starting word : Same as the fist POS of the provided sentence structure
+	 */
+	public static String[] runHeuristicSearchOnGraph(Graph InputGraph,
 			String[] PermittedSentenceSpec, String StartWord,
 			String StartSpeechType) {
 		String[] Sentence = new String[PermittedSentenceSpec.length];
 
-		// Initialize BFSHelper
+		// Initialize HeuristicSearchHelper Class
+		HeuristicSearchHelper heuristicSearchHelper = new HeuristicSearchHelper(
+				InputGraph, PermittedSentenceSpec, StartWord, StartSpeechType);
+
+		// PerformHeuristic Search
+		List<SequenceOfEdges> Sequence = heuristicSearchHelper
+				.PerformHeuristicSearch(heuristicSearchHelper.listOfNodes
+						.remove());
+		// Print the Best sentence as per the maximum probability
+		printOutput(Sequence);
+		// Print the number of comparisons made
+		System.out.println("No of comparisons "
+				+ heuristicSearchHelper.noOfNodesCompared);
+		return Sentence;
+	}
+	/*
+	 * This method calls the implementer class of BFS algorithm.
+	 * Input - 
+	 * 	InputGraph : Graph - of input.txt file
+	 * 	PermittedSentenceSpec : String array - for the permitted sentence structure
+	 * 	StartWord : String - starting word of the sentence to be searched
+	 * 	StartSpeechType : String - Speech type of the starting word : Same as the fist POS of the provided sentence structure
+	 */
+	public static String[] runBFSOnGraph(Graph InputGraph,
+			String[] PermittedSentenceSpec, String StartWord,
+			String StartSpeechType) {
+		String[] Sentence = new String[PermittedSentenceSpec.length];
+
+		// Initialize BFSHelper Class
 		BreadthFirstSearchHelper BfsSearchHelper = new BreadthFirstSearchHelper(
 				InputGraph, PermittedSentenceSpec, StartWord, StartSpeechType);
 
-		// PerformBFS
+		// Perform BFS Search
 		List<SequenceOfEdges> Sequence = BfsSearchHelper
-				.PerformBFS(BfsSearchHelper.listOfNodes.remove());
-
+				.performBFS(BfsSearchHelper.listOfNodes.remove());
+		// Print the best sentence as per the maximum probability
 		printOutput(Sequence);
-		
-		System.out.println("No of comparisons " + BfsSearchHelper.noOfNodesCompared);
+		// Print the number of comparisons made
+		System.out.println("No of comparisons "
+				+ BfsSearchHelper.noOfNodesCompared);
 		return Sentence;
 	}
-	
-	public static String[] RunDFSOnGraph(Graph InputGraph,
+	/*
+	 * This method calls the implementer class of DFS algorithm.
+	 * Input - 
+	 * 	InputGraph : Graph - of input.txt file
+	 * 	PermittedSentenceSpec : String array - for the permitted sentence structure
+	 * 	StartWord : String - starting word of the sentence to be searched
+	 * 	StartSpeechType : String - Speech type of the starting word : Same as the fist POS of the provided sentence structure
+	 */
+	public static String[] runDFSOnGraph(Graph InputGraph,
 			String[] PermittedSentenceSpec, String StartWord,
 			String StartSpeechType) {
 		String[] Sentence = new String[PermittedSentenceSpec.length];
 
-		// Initialize BFSHelper
+		// Initialize DFSHelper Class
 		DepthFirstSearchHelper DfsSearchHelper = new DepthFirstSearchHelper(
 				InputGraph, PermittedSentenceSpec, StartWord, StartSpeechType);
 
-		// PerformDFS
+		// PerformDFS Search
 		List<SequenceOfEdges> Sequence = DfsSearchHelper
 				.PerformDFS(DfsSearchHelper.stackOfNodes.peek());
-
+		// Print the best sentence as per the maximum probability
 		printOutput(Sequence);
-		
-		System.out.println("No of comparisons " + DfsSearchHelper.noOfNodesCompared);
+		// Print the number of comparisons made
+		System.out.println("Total nodes considered "
+				+ DfsSearchHelper.noOfNodesCompared);
 		return Sentence;
 	}
 
+	/*
+	 * This method prints the best sentence as per the maximum probability
+	 * Input - sequence : List of all the sentences that adhere to the provided sentence structure
+	 */
 	public static void printOutput(List<SequenceOfEdges> sequence) {
+
 		// Print the Output
 		double MaxProb = 0.00;
-		String sentenceBest = "Best Sentence : ";
-		String SpeechSentenceCorrect = ", Correct Speech : ";
+		String sentenceBest = "";
 		boolean maxExceeded = false;
 		for (SequenceOfEdges seqEdge : sequence) {
 
@@ -77,37 +156,30 @@ public class NaturalLanguageGenerator {
 			String sentence = "Sentence : ";
 			String SpeechSentence = ", Speech : ";
 			for (Edge edgeInSequence : seqEdge.edgeList) {
-				prob *= edgeInSequence.Probability;
+				prob *= edgeInSequence.probability;
 			}
 			if (prob > MaxProb) {
 				MaxProb = prob;
 				maxExceeded = true;
-
 			}
-
 			List<Vertice> allVertices = BreadthFirstSearchHelper
 					.getVerticesFromSequence(seqEdge);
-
 			if (maxExceeded) {
-				sentenceBest = "Best Sentence : ";
-				SpeechSentenceCorrect = ", Correct Speech : ";
+				sentenceBest = "";
 			}
 			for (Vertice ver : allVertices) {
 				sentence += ver.Name + " ";
 				SpeechSentence += ver.SpeechType + " ";
-
 				if (maxExceeded) {
-
 					sentenceBest += ver.Name + " ";
-					SpeechSentenceCorrect += ver.SpeechType + " ";
-
 				}
 			}
 			maxExceeded = false;
 			System.out.println(sentence + SpeechSentence + ", Probability : "
 					+ prob);
+
 		}
-		System.out.println(sentenceBest + SpeechSentenceCorrect
-				+ ", Probability : " + MaxProb);
+		System.out.println(sentenceBest + " with a probability of " + MaxProb);
+
 	}
 }
